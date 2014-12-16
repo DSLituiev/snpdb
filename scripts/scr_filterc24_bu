@@ -1,0 +1,17 @@
+#!/bin/bash
+
+python3.4 ./annotate_with_ecotype_snps.py /media/Processing/MATLAB/SeqMapping/figures/MO7-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna/MO7-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna-out-2dap-colour-fd.csv '*' -l MO7
+
+wc -l /media/Processing/MATLAB/SeqMapping/figures/MO7-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna/MO7-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna-out-2dap-colour-fd.csv \
+| cut -d' ' -f1
+
+wc -l /media/Processing/MATLAB/SeqMapping/figures/MO7-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna/MO7-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna-out-2dap-colour-fd-ecotypeInfo.csv \
+| cut -d' ' -f1
+
+python3.4 ./annotate_with_ecotype_snps.py /media/Processing/MATLAB/SeqMapping/figures/MO8-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna/MO8-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna-out-2dap-colour-fd.csv '*' -l MO8
+
+wc -l /media/Processing/MATLAB/SeqMapping/figures/MO8-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna/MO8-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna-out-2dap-colour-fd.csv \
+| cut -d' ' -f1
+
+wc -l /media/Processing/MATLAB/SeqMapping/figures/MO8-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna/MO8-rmdup-clipOverlap-q20-freebayes-ems-annotation-array-rna-out-2dap-colour-fd-ecotypeInfo.csv \
+| cut -d' ' -f1

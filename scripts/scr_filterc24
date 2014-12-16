@@ -1,0 +1,25 @@
+#!/bin/bash
+SMPL="20140514.A-MO7-bq20-ems-annotation"
+IN7="/media/Processing/MATLAB/SeqMapping/figures/MO/${SMPL}/${SMPL}-out.csv"
+
+#python3.4 ./vcf_to_sqlite.py ${IN7} -l MO7
+
+python3.4 ../filter_ecotype_snps.py ${IN7} '*' -l MO7
+
+wc -l  ${IN7} | cut -d' ' -f1
+
+wc -l `echo ${IN7} | sed 's/.csv/-ecotypeInfo.csv/g'` | cut -d' ' -f1
+
+echo "finished MO7"
+
+SMPL="20140514.A-MO8-bq20-ems-annotation"
+IN7="/media/Processing/MATLAB/SeqMapping/figures/MO/${SMPL}/${SMPL}-out.csv"
+
+# python3.4 ./vcf_to_sqlite.py ${IN7} -l MO8
+
+python3.4 ../filter_ecotype_snps.py ${IN7} '*' -l MO8
+
+wc -l  ${IN7} | cut -d' ' -f1
+
+wc -l `echo ${IN7} | sed 's/.csv/-ecotypeInfo.csv/g'` | cut -d' ' -f1
+
