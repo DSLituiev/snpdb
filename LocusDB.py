@@ -13,8 +13,12 @@ def strtofloat(s):
     else:
         return float(s)
 
-class pieces(object):
-    def getRowNamesSqlite(self):
+class Pieces(object):
+    """
+    a basis class for `Locus` and `Segregants` classes. 
+    Provides functionality for database handling.
+    """
+    def _getRowNamesSqlite_(self):
         ii = 0
         outList = [0]* ( len(self.outFields) )
         for ff in self.outFields:
@@ -31,7 +35,7 @@ class pieces(object):
         return (outList[0], outList[1:])
     
     def sqlType(self):
-        fields = self.getRowNamesSqlite()
+        fields = self._getRowNamesSqlite_()
         typeDict = {'int': 'INT', 'str': 'TEXT', 'float': 'REAL', 'none': 'NULL' }
         out = []
         for ff in fields:
@@ -45,7 +49,7 @@ class pieces(object):
     
 
     
-class segregants(pieces):    
+class Segregants(Pieces):    
     outFields = ['chr', 'pos', 'totCount', 'refCount', 'altCount']
     def __init__(self, name, cc, pos, refCount, altCount, refQuality = 0, altQuality = 0):        
         if not (refCount is None):            
@@ -70,7 +74,7 @@ class segregants(pieces):
             self.totCount = 0
             self.altFrequency = 0
 
-class Locus(pieces):
+class Locus(Pieces):
     outFields = []
     segrPops = ["mt", "wt"]
     #===========
@@ -87,6 +91,16 @@ class Locus(pieces):
 
         
     def __init__(self, line, SO_DICTIONARY, numOfSamples = 1, flag = 0):
+        """
+        INPUT:
+
+        - `line` takes a line from a `.vcf` file
+        - `SO_DICTIONARY` (read from a `.csv` file) provides annotation ranking,
+        based on which an annotation to be stored in the database is selected
+        - `numOfSamples` -- number of samples (one `vcf` file may carry information 
+        about several samples). The sample-specific information is stored in the 
+        `pop` attribute (of `Segregants` class)
+        """
         self.numOfSamples = numOfSamples
         self.pop = [None]*numOfSamples
         #===========
@@ -105,9 +119,9 @@ class Locus(pieces):
             self.quality = 0;
             self.refAllele = "";
             self.altAllele = "";        
-            self.pop[0] = segregants('mt', 0, 0, None, None)
+            self.pop[0] = Segregants('mt', 0, 0, None, None)
             if self.numOfSamples>1:
-                self.pop[1] = segregants('wt', 0, 0, None, None)
+                self.pop[1] = Segregants('wt', 0, 0, None, None)
             if len(SO_DICTIONARY)>0:
                 self.geneID = "";
                 self.geneSO = "";
@@ -159,10 +173,10 @@ class Locus(pieces):
             ii = 0
             while ii<self.numOfSamples:            
                 (refCount, altCount, refQuality, altQuality) = readSampleCounts(self, cols, ii)
-                self.pop[ii] = segregants(self.segrPops[ii], self.chr, self.pos, refCount, altCount, refQuality, altQuality)
+                self.pop[ii] = Segregants(self.segrPops[ii], self.chr, self.pos, refCount, altCount, refQuality, altQuality)
                 ii +=1
         else:
-            self.pop[0] = segregants('mt', self.chr, self.pos, refCount, altCount, refQuality, altQuality)
+            self.pop[0] = Segregants('mt', self.chr, self.pos, refCount, altCount, refQuality, altQuality)
             
         ## gene annotation column
         if len(SO_DICTIONARY)==0:
@@ -244,7 +258,7 @@ class Locus(pieces):
 #            ii += 1
 #        return (self.chr, outList)
 #            
-#    def getRowNamesSqlite(self):
+#    def _getRowNamesSqlite_(self):
 #        ii = 0
 #        outList = [0]* ( len(self.outFields) -1)
 #        

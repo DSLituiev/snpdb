@@ -72,34 +72,10 @@ def rewriteTableChr(curs, tableName, rowSqlTypes, cc):
     curs.execute(query)            
     
     query = ' CREATE TABLE %s_%u (' % (tableName, cc) + rowSqlTypes + ')'            
-    curs.execute(query)           
+    curs.execute(query)
 ###############################################################################
-if len(args.soterms)>0 and not (args.soterms=='0') :
-    SO_DICTIONARY = readsodict(args.soterms)
-else:
-    SO_DICTIONARY = []
-
-#if not args.outFile == r'-':
-#    sys.stdout = open(args.outFile, 'w')
-
-f = open(args.inFile)
-
-# columnnames = f.readline();
-
-commre = re.compile(r"^[ ]*#.*");
-
-loc = Locus("", SO_DICTIONARY);
-
-###############################################################################
- 
-if (args.frequencyFilter and not args.altCountFilter):
-    for line in f:
-        if not (commre.match(line)):
-            loc = Locus(line, SO_DICTIONARY);
-            loc.printFields(args.csvseparator)
-else:
-    totLines = 0
-    skippedLines = 0
+def readVcfHeader(f):
+    commre = re.compile(r"^[ ]*#.*")
     for line in f:
         if not (commre.match(line)):
             header = lastheaderline.split("\t");
@@ -117,49 +93,65 @@ else:
         else:
             lastheaderline = line
         
-    loc.numOfSamples = numOfSamples
+    return numOfSamples
+###########################################################################
+###############################################################################
+if len(args.soterms)>0 and not (args.soterms=='0'):
+    SO_DICTIONARY = readsodict(args.soterms)
+else:
+    SO_DICTIONARY = []
 
-    ###########################################################################
-    ##  initialize the tables    
+#if not args.outFile == r'-':
+#    sys.stdout = open(args.outFile, 'w')
 
-    print("writing to the database '%s'" % args.dbPath, file=sys.stderr)
-    conn = sqlite3.connect(args.dbPath)
-    dbName = args.label
-    chrNumber = 5
-    
-    rowSqlTypes  = loc.sqlType()
-    countSqlTypes = loc.pop[0].sqlType()
-    initializeTables(conn, dbName, ', '.join(rowSqlTypes), ', '.join(countSqlTypes), 5)
-    
-    ###########################################################################    
-    ## fill in the tables
-    chrom = '0'
-    with conn:
-        curs = conn.cursor()
-        print('-----------------------------', file=sys.stderr)
-        print('-  filling in the database  -', file=sys.stderr)
-        vcfQMarks = ','.join(['?'] * len(rowSqlTypes))
-        countQMarks = ','.join(['?'] * len(countSqlTypes))        
-        ## load vcf data into the database
-        for line in f: 
-                totLines += 1
-                loc = Locus(line, SO_DICTIONARY, numOfSamples);
-                if (applyFilter(args, loc)):
-                    vcfRow = loc.getRowSqlite()
-                    if (len(vcfRow[0])==1):   # ignore chloroplasts and mitochondria
-                        query = u'INSERT INTO %s_vcf_%s VALUES ( %s )' % (dbName, vcfRow[0], vcfQMarks )
-                        curs.execute(query, tuple(vcfRow[1]))                    
-                        for ii in range(loc.numOfSamples):
-                            countRow = loc.pop[ii].getRowSqlite()
-                            query = u'INSERT INTO %s_%sCounts_%s VALUES ( %s )' % (dbName, loc.pop[ii].name, countRow[0], countQMarks)
-                            curs.execute(query, tuple(countRow[1]) )
-                        if not chrom == vcfRow[0]:
-                            print('processing chromosome %s' % vcfRow[0], file=sys.stderr)
-                        chrom = vcfRow[0]
-                else:
-                    skippedLines += 1
-        print('-----------------------------', file=sys.stderr)        
-        print( "out of %u lines," % totLines, "%u skipped" % skippedLines , "%u remained" % (totLines-skippedLines), file=sys.stderr)
+f = open(args.inFile)
+
+loc = Locus("", SO_DICTIONARY);
+numOfSamples = readVcfHeader(f)
+loc.numOfSamples = numOfSamples
+
+##  initialize the tables    
+
+print("writing to the database '%s'" % args.dbPath, file=sys.stderr)
+conn = sqlite3.connect(args.dbPath)
+dbName = args.label
+chrNumber = 5
+
+rowSqlTypes  = loc.sqlType()
+countSqlTypes = loc.pop[0].sqlType()
+initializeTables(conn, dbName, ', '.join(rowSqlTypes), ', '.join(countSqlTypes), 5)
+
+###########################################################################    
+## fill in the tables
+chrom = '0'
+with conn:
+    curs = conn.cursor()
+    print('-----------------------------', file=sys.stderr)
+    print('-  filling in the database  -', file=sys.stderr)
+    vcfQMarks = ','.join(['?'] * len(rowSqlTypes))
+    countQMarks = ','.join(['?'] * len(countSqlTypes))        
+    ## load vcf data into the database
+    totLines = 0
+    skippedLines = 0
+    for line in f: 
+            totLines += 1
+            loc = Locus(line, SO_DICTIONARY, numOfSamples);
+            if (applyFilter(args, loc)):
+                vcfRow = loc.getRowSqlite()
+                if (len(vcfRow[0])==1):   # ignore chloroplasts and mitochondria
+                    query = u'INSERT INTO %s_vcf_%s VALUES ( %s )' % (dbName, vcfRow[0], vcfQMarks )
+                    curs.execute(query, tuple(vcfRow[1]))                    
+                    for ii in range(loc.numOfSamples):
+                        countRow = loc.pop[ii].getRowSqlite()
+                        query = u'INSERT INTO %s_%sCounts_%s VALUES ( %s )' % (dbName, loc.pop[ii].name, countRow[0], countQMarks)
+                        curs.execute(query, tuple(countRow[1]) )
+                    if not chrom == vcfRow[0]:
+                        print('processing chromosome %s' % vcfRow[0], file=sys.stderr)
+                    chrom = vcfRow[0]
+            else:
+                skippedLines += 1
+    print('-----------------------------', file=sys.stderr)        
+    print( "out of %u lines," % totLines, "%u skipped" % skippedLines , "%u remained" % (totLines-skippedLines), file=sys.stderr)
 ###############################################################################
 
 
