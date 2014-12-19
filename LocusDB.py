@@ -6,6 +6,7 @@ Created on Thu Jul 10 14:18:38 2014
 """
 import re
 import sys
+##########################################
 
 def strtofloat(s):
     if s == '':
